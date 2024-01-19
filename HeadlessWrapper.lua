@@ -89,7 +89,8 @@ function GetAsyncCount()
 end
 
 -- Search Handles
-function NewFileSearch() end
+local filesearch = require("filesearch")
+NewFileSearch = filesearch.NewFileSearch
 
 -- General Functions
 function SetWindowTitle(title) end
@@ -108,14 +109,61 @@ function Copy(text) end
 
 function Paste() end
 
+local zlib = require('zlib.ffi-zlib')
+
 function Deflate(data)
-	-- TODO: Might need this
-	return ""
+	local finish = 0
+	local len = #data
+	local input = function(bufsize)
+		if finish >= len then
+			return nil
+		end
+		finish = finish + bufsize
+		return string.sub(data, finish - bufsize + 1, finish)
+	end
+	local output_table = {}
+	local output = function(d)
+		table.insert(output_table, d)
+	end
+
+	local options = {}
+	-- use zlib header
+	-- https://stackoverflow.com/questions/54663140/how-to-change-deflate-stream-output-formatraw-zlib-gzip-when-use-zlib
+	options.windowBits = 15
+	local ok, err = zlib.deflateGzip(input, output, nil, options)
+	if not ok then
+		ConPrintf(err)
+	end
+
+	return table.concat(output_table, '')
 end
 
 function Inflate(data)
-	-- TODO: And this
-	return ""
+	local count = 0
+	local input = function(bufsize)
+		local start = count > 0 and bufsize * count or 1
+		local finish = (bufsize * (count + 1) - 1)
+		count = count + 1
+		if bufsize == 1 then
+			start = count
+			finish = count
+		end
+		return data:sub(start, finish)
+	end
+
+	local output_table = {}
+	local output = function(d)
+		table.insert(output_table, d)
+	end
+
+	-- Decompress the data
+	local ok, err = zlib.inflateGzip(input, output)
+	if not ok then
+		ConPrintf(err)
+		return
+	end
+
+	return table.concat(output_table, '')
 end
 
 function GetTime()

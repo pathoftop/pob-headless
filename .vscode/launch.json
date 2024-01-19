@@ -9,10 +9,10 @@
             "type": "lua-local",
             "request": "launch",
             "program": {
-                "lua": "D:\\AppsInDisk\\luajit2.0\\luajit.exe",
+                "lua": "D:\\AppsInDisk\\luajit2.1_x64\\luajit.exe",
                 "file": "${file}"
             },
-            "env": {"LUA_PATH": "./lua/?.lua;./lua/?/init.lua;"}
+            "env": {"LUA_PATH": "./lua/?.lua;./lua/?/init.lua;","LUA_CPATH": "./lua/?/?.dll;"}
         },
         {
             "name": "Debug Custom Lua Environment",
