@@ -171,7 +171,7 @@ function GetTime()
 end
 
 function GetScriptPath()
-	return ""
+	return "."
 end
 
 function GetRuntimePath()
