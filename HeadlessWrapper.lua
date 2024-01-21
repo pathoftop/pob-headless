@@ -301,3 +301,117 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	-- You now have a build without a correct main skill selected, or any configuration options set
 	-- Good luck!
 end
+
+local port = 8888
+local host = "0.0.0.0"
+local http_server = require "http.server"
+local http_headers = require "http.headers"
+
+local function response(stream, content, status)
+	local res_headers = http_headers.new()
+	res_headers:append(":status", status)
+	res_headers:append("content-type", "text/plain")
+	assert(stream:write_headers(res_headers, false))
+	assert(stream:write_chunk(content, true))
+end
+
+-- controller
+
+local function loadBuildFromJSONHandler(stream)
+	local body, err = stream:get_body_as_string()
+	if not body and err then
+		response(stream, tostring(err), "500")
+		return
+	end
+
+	if #body < 8 then
+		response(stream, "bad request", "400")
+		return
+	end
+
+	local itemsLen = tonumber(body:sub(1, 8))
+	if itemsLen == nil then
+		response(stream, "bad request", "400")
+		return
+	end
+
+	local items = body:sub(9, 8 + itemsLen)
+	local passiveSkills = body:sub(9 + itemsLen)
+
+	loadBuildFromJSON(items, passiveSkills)
+	response(stream, "", "200")
+end
+
+local function loadBuildFromXMLHandler(stream)
+	local body, err = stream:get_body_as_string()
+	if not body and err then
+		response(stream, tostring(err), "500")
+		return
+	end
+
+	loadBuildFromXML(body, "")
+	response(stream, "", "200")
+end
+
+local function saveXMLHandler(stream)
+	local db = build:SaveDB("code")
+
+	response(stream, db, "200")
+end
+
+local function saveCodeHandler(stream)
+	local db = build:SaveDB("code")
+
+	response(stream, common.base64.encode(Deflate(db)):gsub("+", "-"):gsub("/", "_"), "200")
+end
+-- controller
+
+local function reply(myserver, stream) -- luacheck: ignore 212
+	-- Read in headers
+	local req_headers = assert(stream:get_headers())
+	local req_method = req_headers:get ":method"
+
+	if req_method ~= "HEAD" then
+		local path = req_headers:get(":path") or ""
+		if path == "/loadBuildFromJSON" then
+			loadBuildFromJSONHandler(stream)
+			return
+		end
+		if path == "/loadBuildFromXML" then
+			loadBuildFromXMLHandler(stream)
+			return
+		end
+		if path == "/saveXML" then
+			saveXMLHandler(stream)
+			return
+		end
+		if path == "/saveCode" then
+			saveCodeHandler(stream)
+			return
+		end
+
+		response(stream, "404", "404")
+	end
+end
+
+local myserver = assert(http_server.listen {
+	host = host,
+	port = port,
+	onstream = reply,
+	onerror = function(myserver, context, op, err, errno) -- luacheck: ignore 212
+		local msg = op .. " on " .. tostring(context) .. " failed"
+		if err then
+			msg = msg .. ": " .. tostring(err)
+		end
+		assert(io.stderr:write(msg, "\n"))
+	end,
+})
+
+-- Manually call :listen() so that we are bound before calling :localname()
+assert(myserver:listen())
+do
+	local bound_port = select(3, myserver:localname())
+	assert(io.stderr:write(string.format("Now listening on port %d\n", bound_port)))
+end
+-- Start the main server loop
+assert(myserver:loop())
