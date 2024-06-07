@@ -1,0 +1,21 @@
+# 移除旧赛季天赋树数据
+rm -r ./TreeData/2_6/
+rm -r ./TreeData/3_6/
+rm -r ./TreeData/3_7/
+rm -r ./TreeData/3_8/
+rm -r ./TreeData/3_9/
+rm -r ./TreeData/3_10/
+rm -r ./TreeData/3_11/
+rm -r ./TreeData/3_12/
+rm -r ./TreeData/3_13/
+rm -r ./TreeData/3_14/
+rm -r ./TreeData/3_15/
+rm -r ./TreeData/3_16/
+rm -r ./TreeData/3_17/
+rm -r ./TreeData/3_19/
+rm -r ./TreeData/3_20/
+rm -r ./TreeData/3_21/
+rm -r ./TreeData/3_22/
+rm -r ./TreeData/3_22_ruthless/
+rm -r ./TreeData/3_23/
+rm -r ./TreeData/3_23_ruthless/
