@@ -227,6 +227,7 @@ end
 -- Iterate over modifiers to see if specific substring is found (for conditional checking)
 function ItemClass:FindModifierSubstring(substring, itemSlotName)
 	local modLines = {}
+	local substring, explicit = substring:gsub("explicit ", "")
 
 	-- The commented out line below is used at GGPK updates to check if any new modifiers
 	-- have been identified that need to be added to the manually maintained special modifier
@@ -234,11 +235,13 @@ function ItemClass:FindModifierSubstring(substring, itemSlotName)
 	--getTagBasedModifiers(substring, itemSlotName)
 
 	-- merge various modifier lines into one table
-	for _,v in pairs(self.enchantModLines) do t_insert(modLines, v) end
-	for _,v in pairs(self.scourgeModLines) do t_insert(modLines, v) end
-	for _,v in pairs(self.implicitModLines) do t_insert(modLines, v) end
 	for _,v in pairs(self.explicitModLines) do t_insert(modLines, v) end
-	for _,v in pairs(self.crucibleModLines) do t_insert(modLines, v) end
+	if explicit < 1 then
+		for _,v in pairs(self.enchantModLines) do t_insert(modLines, v) end
+		for _,v in pairs(self.scourgeModLines) do t_insert(modLines, v) end
+		for _,v in pairs(self.implicitModLines) do t_insert(modLines, v) end
+		for _,v in pairs(self.crucibleModLines) do t_insert(modLines, v) end
+	end
 
 	for _,v in pairs(modLines) do
 		local currentVariant = false
@@ -919,6 +922,19 @@ function ItemClass:GetModSpawnWeight(mod, includeTags, excludeTags)
 		for i, key in ipairs(mod.weightMultiplierKey) do
 			if (self.base.tags[key] or (includeTags and includeTags[key]) or HasInfluenceTag(key)) and not (excludeTags and excludeTags[key]) then
 				weight = weight * mod.weightMultiplierVal[i] / 100
+				break
+			end
+		end
+	end
+	return weight
+end
+
+function ItemClass:GetNecropolisModSpawnWeight(mod)
+	local weight = 0
+	if self.base then
+		for i, key in ipairs(mod.weightKey) do
+			if self.base.tags[key:gsub("necropolis_", "")] then
+				weight = mod.weightVal[i]
 				break
 			end
 		end

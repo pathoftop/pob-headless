@@ -301,3 +301,26 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	-- You now have a build without a correct main skill selected, or any configuration options set
 	-- Good luck!
 end
+
+local function readText(filename)
+	local file = io.open(filename, "r")
+	local text = file:read("*a")
+	file:close()
+	return text
+end
+
+local function saveText(filename, text)
+	local file = io.open(filename, "w+")
+	file:write(text)
+	file:close()
+end
+
+local function xmlBuild(filename)
+	local xml = readText(filename)
+	loadBuildFromXML(xml)
+	--local db = build:SaveDB("code")
+	--saveText(filename, db)
+	print("end")
+end
+
+xmlBuild("./Builds/demo.xml")
