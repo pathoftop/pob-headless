@@ -302,6 +302,8 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	-- Good luck!
 end
 
+local headless = require("headless")
+
 local port = 8888
 local host = "0.0.0.0"
 local http_server = require "http.server"
@@ -364,6 +366,30 @@ local function saveCodeHandler(stream)
 
 	response(stream, common.base64.encode(Deflate(db)):gsub("+", "-"):gsub("/", "_"), "200")
 end
+
+local function getAllSkillsHandler(stream)
+	return headless.getAllSkills(build)
+end
+
+local function getAllMainSkillsHandler(stream)
+	local body, err = stream:get_body_as_string()
+	if not body and err then
+		response(stream, tostring(err), "500")
+		return
+	end
+
+	if #body > 1 then
+		response(stream, "bad request", "400")
+		return
+	end
+
+	local minLinks, err = tonumber(body)
+	if err then
+		response(stream, "bad request", "400")
+	end
+
+	return headless.getAllMainSkills(build, minLinks)
+end
 -- controller
 
 local function reply(myserver, stream) -- luacheck: ignore 212
@@ -388,6 +414,13 @@ local function reply(myserver, stream) -- luacheck: ignore 212
 		if path == "/saveCode" then
 			saveCodeHandler(stream)
 			return
+		end
+		if path == "/getAllSkills" then
+			getAllSkillsHandler(stream)
+			return
+		end
+		if path == "getAllMainSkills" then
+			getAllMainSkillsHandler(stream)
 		end
 
 		response(stream, "404", "404")
