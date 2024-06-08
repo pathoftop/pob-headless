@@ -305,7 +305,7 @@ end
 local headless = require("headless")
 
 local port = 8888
-local host = "0.0.0.0"
+local host = "127.0.0.1"
 local http_server = require "http.server"
 local http_headers = require "http.headers"
 
@@ -399,11 +399,11 @@ local function reply(myserver, stream) -- luacheck: ignore 212
 
 	if req_method ~= "HEAD" then
 		local path = req_headers:get(":path") or ""
-		if path == "/loadBuildFromJSON" then
+		if path == "/loadJSON" then
 			loadBuildFromJSONHandler(stream)
 			return
 		end
-		if path == "/loadBuildFromXML" then
+		if path == "/loadXML" then
 			loadBuildFromXMLHandler(stream)
 			return
 		end
