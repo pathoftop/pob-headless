@@ -368,7 +368,7 @@ local function saveCodeHandler(stream)
 end
 
 local function getAllSkillsHandler(stream)
-	return headless.getAllSkills(build)
+	response(stream, headless.getAllSkills(build), "200")
 end
 
 local function getAllMainSkillsHandler(stream)
@@ -383,12 +383,13 @@ local function getAllMainSkillsHandler(stream)
 		return
 	end
 
-	local minLinks, err = tonumber(body)
+	local minLinks = nil
+	minLinks, err = tonumber(body)
 	if err then
 		response(stream, "bad request", "400")
 	end
 
-	return headless.getAllMainSkills(build, minLinks)
+	response(stream, headless.getAllMainSkills(build, minLinks), "200")
 end
 -- controller
 
@@ -419,7 +420,7 @@ local function reply(myserver, stream) -- luacheck: ignore 212
 			getAllSkillsHandler(stream)
 			return
 		end
-		if path == "getAllMainSkills" then
+		if path == "/getAllMainSkills" then
 			getAllMainSkillsHandler(stream)
 		end
 
