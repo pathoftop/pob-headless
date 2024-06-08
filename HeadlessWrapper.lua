@@ -302,25 +302,38 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	-- Good luck!
 end
 
-local function readText(filename)
-	local file = io.open(filename, "r")
+local function readText(fileName)
+	local file = io.open(fileName, "r")
 	local text = file:read("*a")
 	file:close()
 	return text
 end
 
-local function saveText(filename, text)
-	local file = io.open(filename, "w+")
+local function saveText(fileName, text)
+	local file = io.open(fileName, "w+")
 	file:write(text)
 	file:close()
 end
 
-local function xmlBuild(filename)
-	local xml = readText(filename)
+local function loadBuildFromXMLFile(fileName)
+	local xml = readText(fileName)
 	loadBuildFromXML(xml)
-	--local db = build:SaveDB("code")
-	--saveText(filename, db)
-	print("end")
 end
 
-xmlBuild("./Builds/demo.xml")
+local function loadBuildFromJsonFiles(itemsFileName, passiveSkillsFileName)
+	local items = readText(itemsFileName)
+	local passiveSkills = readText(passiveSkillsFileName)
+	loadBuildFromJSON(items, passiveSkills)
+end
+
+local headless = require("headless")
+
+local function main()
+	loadBuildFromXMLFile("./Builds/demo.xml")
+	local build = build
+	print(headless.getAllSkills(build))
+	-- local db = build:SaveDB("code")
+	-- saveText("./Builds/out.xml", db)
+end
+
+main()
