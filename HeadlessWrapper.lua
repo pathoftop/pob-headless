@@ -319,7 +319,7 @@ end
 
 -- controller
 
-local function loadBuildFromJSONHandler(stream)
+local function loadJSONHandler(stream)
 	local body, err = stream:get_body_as_string()
 	if not body and err then
 		response(stream, tostring(err), "500")
@@ -344,7 +344,7 @@ local function loadBuildFromJSONHandler(stream)
 	response(stream, "", "200")
 end
 
-local function loadBuildFromXMLHandler(stream)
+local function loadXMLHandler(stream)
 	local body, err = stream:get_body_as_string()
 	if not body and err then
 		response(stream, tostring(err), "500")
@@ -400,11 +400,11 @@ local function reply(myserver, stream) -- luacheck: ignore 212
 	if req_method ~= "HEAD" then
 		local path = req_headers:get(":path") or ""
 		if path == "/loadJSON" then
-			loadBuildFromJSONHandler(stream)
+			loadJSONHandler(stream)
 			return
 		end
 		if path == "/loadXML" then
-			loadBuildFromXMLHandler(stream)
+			loadXMLHandler(stream)
 			return
 		end
 		if path == "/saveXML" then
