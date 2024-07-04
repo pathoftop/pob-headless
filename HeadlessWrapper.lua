@@ -327,11 +327,13 @@ local function loadBuildFromJsonFiles(itemsFileName, passiveSkillsFileName)
 end
 
 local headless = require("headless")
+local json = require("json")
 
 local function main()
 	loadBuildFromXMLFile("./Builds/demo.xml")
 	local build = build
-	print(headless.getAllSkills(build))
+	print(json.encode(headless.getAllGems(build)))
+	print(json.encode(headless.getAllMainSkills(build, 5)))
 	-- local db = build:SaveDB("code")
 	-- saveText("./Builds/out.xml", db)
 end

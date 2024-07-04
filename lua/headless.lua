@@ -24,55 +24,101 @@ function headless.getMainSkillDPS(build)
 	return build.calcsTab.mainOutput["CombinedDPS"]
 end
 
--- Return a string contains all skills separated by ",". 
--- 
--- There may be tailed ",".
-function headless.getAllSkills(build)
-	local data = ""
+local function gemName(gem)
+	if gem["gemData"] and gem["gemData"]["name"] then
+		return gem["gemData"]["name"]
+	end
+	return gem["grantedEffect"]["baseTypeName"]
+end
 
+-- Return an table containing all gems.
+function headless.getAllGems(build)
+	local gems = {}
 	local socketGroupList = build.skillsTab.socketGroupList
-	for i = 1, #socketGroupList do
-		local gemList = socketGroupList[i]["gemList"]
+	for i, socketGroup in ipairs(socketGroupList) do
+		-- skip gems in the inactive weapon set
+		if not socketGroup.slotEnabled then
+			goto continue
+		end
+		local gemList = socketGroup["gemList"]
 		if gemList then
-			for j = 1, #gemList do
-				data = data .. gemList[j]["nameSpec"] .. ","
+			for j, gem in ipairs(gemList) do
+				if gem["nameSpec"] and gem["nameSpec"] ~= "" then
+					-- vaal gems contain two gems
+					if gem.gemData and gem.gemData.vaalGem then
+						table.insert(gems, gem.gemData.grantedEffectList[1].name)
+						table.insert(gems, gem.gemData.grantedEffectList[2].name)
+					else
+						table.insert(gems, gem["nameSpec"])
+					end
+				end
 			end
+		end
+		-- support gems may contain gems from items
+		local displaySkillList = socketGroup["displaySkillList"]
+		if displaySkillList then
+			for j, displaySkill in ipairs(displaySkillList) do
+				if displaySkill["supportList"] then
+					for k, support in ipairs(displaySkill["supportList"]) do
+						table.insert(gems, gemName(support))
+					end
+				end
+			end
+		end
+		::continue::
+	end
+
+	-- remove repeats
+	local uniques = {}
+	local skillSet = {}
+	for i, skill in ipairs(gems) do
+		if not skillSet[skill] then
+			table.insert(uniques, skill)
+			skillSet[skill] = true
 		end
 	end
 
-	return data
+	return uniques
 end
 
--- Return a string contains all main skills.
--- Each main skill data is separated by "|", and there may be tailed "|".
--- Main skill data starts with skill names, ends with DPS, each part is separated by ",".
+-- Return an table containing all main skills.
+-- Argument mainLinks specifies the minimum number of links.
 --
--- A sample: 
--- "Elemental Hit of the Spectrum,Increased Critical Damage,Inspiration,380207.49440228|"
+-- A sample:
+-- [{"skill":"Elemental Hit of the Spectrum", "supports":["Increased Critical Damage","Inspiration"], "dps":"380207.49440228"}]
 function headless.getAllMainSkills(build, minLinks)
-	local skillGroupList = build.skillsTab.socketGroupList
-	local data = ""
-	local dataSize = 0
+	local mainSkills = {}
+	local socketGroupList = build.skillsTab.socketGroupList
 
-	for i = 1, #skillGroupList do
+	for i, socketGroup in ipairs(socketGroupList) do
 		headless.setMainSkillGroup(build, i)
-		local displaySkillList = skillGroupList[i]["displaySkillList"]
+		local displaySkillList = socketGroup["displaySkillList"]
 		if displaySkillList then
-			for j = 1, #displaySkillList do
+			for j, displaySkill in ipairs(displaySkillList) do
 				headless.setMainSkill(build, j)
-				local gems = displaySkillList[j]["effectList"]
-				local links = #gems
+
+				local effectList = displaySkill["effectList"]
+				local links = #effectList
 				if links >= minLinks then
-					for k = 1, links do
-						data = data .. gems[k]["gemData"]["name"] .. ","
+					local mainSkill = {}
+
+					mainSkill["skill"] = effectList[1].grantedEffect.name
+
+					local supports = {}
+					for k = 2, links do
+						table.insert(supports, effectList[k].grantedEffect.name)
 					end
-					data = data .. headless.getMainSkillDPS(build) .. "|"
+					mainSkill["supports"] = supports
+
+					mainSkill["dps"] = headless.getMainSkillDPS(build)
+
+					table.insert(mainSkills, mainSkill)
 				end
 			end
 		end
 	end
 
-	return data
+	return mainSkills
 end
 
 return headless
