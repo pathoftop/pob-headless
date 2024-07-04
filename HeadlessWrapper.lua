@@ -303,6 +303,7 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 end
 
 local headless = require("headless")
+local json = require("json")
 
 local port = 8888
 local host = "127.0.0.1"
@@ -367,8 +368,8 @@ local function saveCodeHandler(stream)
 	response(stream, common.base64.encode(Deflate(db)):gsub("+", "-"):gsub("/", "_"), "200")
 end
 
-local function getAllSkillsHandler(stream)
-	response(stream, headless.getAllSkills(build), "200")
+local function getAllGemsHandler(stream)
+	response(stream, json.encode(headless.getAllGems(build)), "200")
 end
 
 local function getAllMainSkillsHandler(stream)
@@ -389,7 +390,7 @@ local function getAllMainSkillsHandler(stream)
 		response(stream, "bad request", "400")
 	end
 
-	response(stream, headless.getAllMainSkills(build, minLinks), "200")
+	response(stream, json.encode(headless.getAllMainSkills(build, minLinks)), "200")
 end
 -- controller
 
@@ -416,8 +417,8 @@ local function reply(myserver, stream) -- luacheck: ignore 212
 			saveCodeHandler(stream)
 			return
 		end
-		if path == "/getAllSkills" then
-			getAllSkillsHandler(stream)
+		if path == "/getAllGems" then
+			getAllGemsHandler(stream)
 			return
 		end
 		if path == "/getAllMainSkills" then
